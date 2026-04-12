@@ -89,7 +89,14 @@ class bot_localizer():
     def extract_bg(self,frame):
 
         # a) Find Contours of all ROI's in frozen sat_view 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if len(frame.shape) == 3:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = frame
+        if gray.dtype != np.uint8:
+            gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+            gray = gray.astype(np.uint8)
+
         edges = cv2.Canny(gray, 50, 150,None,3)
         # [connect_objs] => Connect disconnected edges that are close enough
         edges = self.connect_objs(edges)
