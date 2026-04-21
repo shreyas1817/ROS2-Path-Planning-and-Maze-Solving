@@ -1,4 +1,4 @@
-# 🚀 RUN.md — ROS2 Maze Solver Setup Guide (Ubuntu 20.04)
+ROS2 Maze Solver Setup Guide (Ubuntu 20.04)
 
 ## 📌 Project Overview
 
