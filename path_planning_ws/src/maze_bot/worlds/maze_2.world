@@ -494,7 +494,7 @@
           </geometry>
           <material>
             <script>
-              <name>Gazebo/Black</name>
+              <name>Gazebo/Blue</name>
               <uri>file://media/materials/scripts/gazebo.material</uri>
             </script>
           </material>
@@ -666,7 +666,7 @@
           </geometry>
           <material>
             <script>
-              <name>Gazebo/Orange</name>
+              <name>Gazebo/Green</name>
               <uri>file://media/materials/scripts/gazebo.material</uri>
             </script>
           </material>
@@ -737,7 +737,7 @@
           </geometry>
           <material>
             <script>
-              <name>Gazebo/Orange</name>
+              <name>Gazebo/Green</name>
               <uri>file://media/materials/scripts/gazebo.material</uri>
             </script>
           </material>

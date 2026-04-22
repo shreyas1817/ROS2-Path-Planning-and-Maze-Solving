@@ -83,7 +83,8 @@ source install/setup.bash
 ```bash
 source ~/ROS2-Path-Planning-and-Maze-Solving/path_planning_ws/install/setup.bash
 
-ros2 launch maze_bot maze_1_robot_camera.launch.py
+# Select maze using maze_id:=1 or maze_id:=2 (default is 2)
+ros2 launch maze_bot maze_1_robot_camera.launch.py maze_id:=2
 ```
 
 ---
@@ -93,8 +94,21 @@ ros2 launch maze_bot maze_1_robot_camera.launch.py
 ```bash
 source ~/ROS2-Path-Planning-and-Maze-Solving/path_planning_ws/install/setup.bash
 
-ros2 run maze_bot maze_solver
+# Select planner_method:=a_star or planner_method:=dijkstra
+ros2 run maze_bot maze_solver --ros-args -p planner_method:=a_star
 ```
+
+### Keyboard controls in Maze (Live) window
+
+```text
+1      -> switch planner to Dijkstra
+2      -> switch planner to A*
+Space  -> start robot motion
+Enter  -> start robot motion
+R      -> pause robot motion
+```
+
+Note: The planner selection and start/pause are now available from the UI overlay in the live window.
 
 ---
 
@@ -132,6 +146,94 @@ Check topics:
 
 ```bash
 ros2 topic list
+```
+
+---
+
+## ❗ WSL Run Commands (Used During Debugging)
+
+If you are running in WSL Ubuntu 22.04 with ROS2 Humble:
+
+```bash
+cd /mnt/c/Users/shrey/shre/sem6/MAR/ROS2-Path-Planning-and-Maze-Solving/path_planning_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
+Launch order:
+
+```bash
+# Terminal 1
+source /opt/ros/humble/setup.bash
+cd /mnt/c/Users/shrey/shre/sem6/MAR/ROS2-Path-Planning-and-Maze-Solving/path_planning_ws
+source install/setup.bash
+ros2 launch maze_bot maze_1_robot_camera.launch.py
+
+# Terminal 2
+source /opt/ros/humble/setup.bash
+cd /mnt/c/Users/shrey/shre/sem6/MAR/ROS2-Path-Planning-and-Maze-Solving/path_planning_ws
+source install/setup.bash
+ros2 run maze_bot maze_solver
+```
+
+If you see `RTPS_TRANSPORT_SHM` errors, clean stale shared memory and restart:
+
+```bash
+pkill -f gazebo || true
+pkill -f gzserver || true
+pkill -f gzclient || true
+pkill -f ros2 || true
+rm -rf /dev/shm/fastrtps_* /dev/shm/fastdds_* 2>/dev/null || true
+```
+
+If you see `Unable to start server[bind: Address already in use]` for Gazebo:
+
+```bash
+pkill -f gzclient || true
+pkill -f gzserver || true
+pkill -f gazebo || true
+pkill -f "ros2 launch" || true
+pkill -f maze_solver || true
+```
+
+If needed, force kill:
+
+```bash
+pkill -9 -f gzclient || true
+pkill -9 -f gzserver || true
+pkill -9 -f gazebo || true
+pkill -9 -f "ros2 launch" || true
+pkill -9 -f maze_solver || true
+```
+
+Check Gazebo master port is free (`11345`):
+
+```bash
+ss -lntp | grep 11345 || true
+```
+
+Optional DDS fallback in same terminal before launch:
+
+```bash
+export ROS_LOCALHOST_ONLY=1
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+```
+
+---
+
+## ❗ If `git push origin main` is rejected (fetch first)
+
+```bash
+git fetch origin
+git rebase origin/main
+git push origin main
+```
+
+Optional default setting to use rebase on pull:
+
+```bash
+git config --global pull.rebase true
 ```
 
 ---

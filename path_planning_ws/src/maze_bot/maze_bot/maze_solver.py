@@ -77,6 +77,45 @@ class maze_solver(Node):
 
         self.debugging = Debugging()
 
+        # User-selectable planner: a_star (default) or dijkstra.
+        self.declare_parameter("planner_method", "a_star")
+        planner_method = str(self.get_parameter("planner_method").value).strip().lower()
+        if planner_method in ["dijkstra", "dijisktra"]:
+            self.planner_method = "dijisktra"
+        elif planner_method in ["a_star", "astar", "a*"]:
+            self.planner_method = "a_star"
+        else:
+            self.get_logger().warning(
+                "Unsupported planner_method '%s'. Falling back to 'a_star'." % planner_method
+            )
+            self.planner_method = "a_star"
+        self.get_logger().info("Using planner method: %s" % self.planner_method)
+        self.robot_started = False
+
+    def handle_ui_key(self, key):
+        if key in [ord('1')]:
+            self.planner_method = "dijisktra"
+            self.get_logger().info("Planner changed to: dijisktra")
+        elif key in [ord('2')]:
+            self.planner_method = "a_star"
+            self.get_logger().info("Planner changed to: a_star")
+        elif key in [32, 10, 13]:
+            if not self.robot_started:
+                self.robot_started = True
+                self.get_logger().info("Robot motion started")
+        elif key in [ord('r'), ord('R')]:
+            self.robot_started = False
+            self.vel_msg.linear.x = 0.0
+            self.vel_msg.angular.z = 0.0
+            self.velocity_publisher.publish(self.vel_msg)
+            self.get_logger().info("Robot motion paused")
+
+    def draw_ui_overlay(self, frame_disp):
+        state_str = "RUNNING" if self.robot_started else "PAUSED"
+        planner_str = "A*" if self.planner_method == "a_star" else "DIJKSTRA"
+        cv2.putText(frame_disp, "Planner [1:Dijkstra 2:A*]: {}".format(planner_str), (20, 30), cv2.FONT_HERSHEY_PLAIN, 1.4, (255, 255, 255), 2)
+        cv2.putText(frame_disp, "Motion [Space/Enter: Start, R: Pause]: {}".format(state_str), (20, 55), cv2.FONT_HERSHEY_PLAIN, 1.4, (255, 255, 0), 2)
+
     def get_video_feed_cb(self,data):
         frame = self.bridge.imgmsg_to_cv2(data,'bgr8')
         self.sat_view = frame
@@ -233,16 +272,29 @@ class maze_solver(Node):
         end = self.bot_mapper.Graph.end
         maze = self.bot_mapper.maze
 
-        self.bot_pathplanner.find_path_nd_display(self.bot_mapper.Graph.graph, start, end, maze,method="dijisktra")
-        self.bot_pathplanner.find_path_nd_display(self.bot_mapper.Graph.graph, start, end, maze,method="a_star")
+        self.bot_pathplanner.find_path_nd_display(
+            self.bot_mapper.Graph.graph,
+            start,
+            end,
+            maze,
+            method=self.planner_method,
+        )
         if config.debug and config.debug_pathplanning:
-            print("\nNodes Visited [Dijisktra V A-Star*] = [ {} V {} ]".format(self.bot_pathplanner.dijisktra.dijiktra_nodes_visited,self.bot_pathplanner.astar.astar_nodes_visited))
+            if self.planner_method == "dijisktra":
+                print("\nNodes Visited [Dijisktra] = [ {} ]".format(self.bot_pathplanner.dijisktra.dijiktra_nodes_visited))
+            else:
+                print("\nNodes Visited [A-Star*] = [ {} ]".format(self.bot_pathplanner.astar.astar_nodes_visited))
 
 
         # [Stage 4: MotionPlanning] Reach the (maze exit) by navigating the path previously computed
         bot_loc = self.bot_localizer.loc_car
         path = self.bot_pathplanner.path_to_goal
-        self.bot_motionplanner.nav_path(bot_loc, path, self.vel_msg, self.velocity_publisher)
+        if self.robot_started:
+            self.bot_motionplanner.nav_path(bot_loc, path, self.vel_msg, self.velocity_publisher)
+        else:
+            self.vel_msg.linear.x = 0.0
+            self.vel_msg.angular.z = 0.0
+            self.velocity_publisher.publish(self.vel_msg)
 
         # Displaying bot solving maze  (Live)
         img_shortest_path = self.bot_pathplanner.img_shortest_path
@@ -269,9 +321,12 @@ class maze_solver(Node):
         cv2.putText(frame_disp, "Bot View", orig, cv2.FONT_HERSHEY_PLAIN, 2, (255,0,0),3)
         frame_disp = cv2.rectangle(frame_disp, (20,bot_offset), (bot_view.shape[1]+20,(bot_view.shape[0]+bot_offset)), (0,0,255),12)
         frame_disp[bot_offset:(bot_view.shape[0]+bot_offset),20:bot_view.shape[1]+20] = bot_view
+
+        self.draw_ui_overlay(frame_disp)
  
         cv2.imshow("Maze (Live)", frame_disp)
-        cv2.waitKey(1)
+        key = cv2.waitKey(1) & 0xFF
+        self.handle_ui_key(key)
 
 def main(args =None):
     rclpy.init()

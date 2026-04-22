@@ -87,6 +87,11 @@ class bot_motionplanner():
         self.curr_speed = 0
         self.curr_angle = 0
 
+        # Tunables to avoid large forward-then-backward jumps at startup.
+        self.calibration_forward_iters = 8
+        self.backpedal_speed = -0.08
+        self.max_backpedal_iters = 35
+
 
     @staticmethod
     def euler_from_quaternion(x, y, z, w):
@@ -235,7 +240,7 @@ class bot_motionplanner():
         change_angle_to_turn = abs(angle_to_turn-self.prev_angle_to_turn)
 
         # If angle is large and the its not changing verymuch and not already self.backpeddling
-        if( (abs(angle_to_turn) >5) and (change_angle_to_turn<0.4) and (not self.trigger_backpeddling) ):
+        if( (abs(angle_to_turn) >5) and (change_angle_to_turn<0.4) and (not self.trigger_backpeddling) and (self.path_iter > 2) ):
             self.angle_not_changed +=1
             # For a significant time angle not changed ---> Trigger self.backpeddling [Move car Reverse]
             if(self.angle_not_changed>200):
@@ -249,7 +254,7 @@ class bot_motionplanner():
         change_dist = abs(distance_to_goal-self.Prev_distance_to_goal)
 
         # If dist is large and the its not changing verymuch and not already self.backpeddling
-        if( (abs(distance_to_goal) >5) and (change_dist<1.2) and (not self.trigger_backpeddling) ):
+        if( (abs(distance_to_goal) >5) and (change_dist<1.2) and (not self.trigger_backpeddling) and (self.path_iter > 2) ):
             self.dist_not_changed +=1
             # For a significant time dist not changed ---> Trigger self.backpeddling [Move car Reverse]
             if(self.dist_not_changed>200):
@@ -335,11 +340,11 @@ class bot_motionplanner():
             if self.backpeddling==0:
                 self.trigger_nxtpt = True
             # Making car reverse by setting linear component negative
-            velocity.linear.x = -0.16
+            velocity.linear.x = self.backpedal_speed
             velocity.angular.z = angle
             self.backpeddling+=1
             # Stop backpeddling after some time
-            if self.backpeddling == 100:
+            if self.backpeddling == self.max_backpedal_iters:
                 self.trigger_backpeddling = False
                 self.backpeddling = 0
                 print("###> backpeddling DONE <###")
@@ -393,7 +398,7 @@ class bot_motionplanner():
                 self.goal_pose_x = path[self.path_iter][0]
                 self.goal_pose_y = path[self.path_iter][1]
 
-        if (self.count >20):
+        if (self.count > self.calibration_forward_iters):
 
             if not self.angle_relation_computed:
 
@@ -426,7 +431,7 @@ class bot_motionplanner():
                 self.init_loc = bot_loc
                 self.pt_i_taken = True
                 
-            # Keep moving forward for 20 iterations(count)
+            # Keep moving forward briefly for initial heading calibration.
             velocity.linear.x = 1.0
             velocity_publisher.publish(velocity)
 
