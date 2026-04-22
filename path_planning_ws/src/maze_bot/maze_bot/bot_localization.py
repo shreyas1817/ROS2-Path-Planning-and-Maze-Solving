@@ -60,6 +60,8 @@ class bot_localizer():
             cnts_ = np.array(cnts_)
             cv2.fillConvexPoly(maze_enclosure, cnts_, 255)
         cnts_largest = cv2.findContours(maze_enclosure, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]# OpenCV 4.2
+        if not cnts_largest:
+            return None
         hull = cv2.convexHull(cnts_largest[0])
         cv2.drawContours(maze_enclosure, [hull], 0, 255)
         return hull
@@ -88,6 +90,9 @@ class bot_localizer():
     
     def extract_bg(self,frame):
 
+        if frame is None or frame.size == 0:
+            return False
+
         # a) Find Contours of all ROI's in frozen sat_view 
         if len(frame.shape) == 3:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -110,6 +115,8 @@ class bot_localizer():
         #               ii) filling the empty region with Ground_replica
         min_cntr_idx = ret_smallest_obj(cnts)
         rois_noCar_mask = rois_mask.copy()
+        frame_car_remvd = frame.copy()
+        Ground_replica = frame.copy()
         #    If Smallest Object (FG) found         
         if min_cntr_idx !=-1:
             cv2.drawContours(rois_noCar_mask, cnts, min_cntr_idx, 0,-1)
@@ -130,7 +137,11 @@ class bot_localizer():
         
         # a) Finding dimensions of hull enclosing largest contour
         hull = self.ret_rois_boundinghull(rois_mask,cnts)
+        if hull is None:
+            return False
         [X,Y,W,H] = cv2.boundingRect(hull)
+        if W == 0 or H == 0:
+            return False
         # b) Cropping maze_mask from the image
         maze = rois_noCar_mask[Y:Y+H,X:X+W]
         maze_occupencygrid = cv2.bitwise_not(maze)
@@ -146,9 +157,13 @@ class bot_localizer():
             cv2.imshow("1d. bg_model",self.bg_model)
             cv2.imshow("2. maze_og",self.maze_og)
 
+        return True
+
     @staticmethod
     def get_centroid(cnt):
         M = cv2.moments(cnt)
+        if M['m00'] == 0:
+            return None
         cx = int(M['m10']/M['m00'])
         cy = int(M['m01']/M['m00'])
         return (cy,cx)
@@ -157,6 +172,8 @@ class bot_localizer():
         
         # a) Get the centroid of the car
         bot_cntr = self.get_centroid(car_cnt)
+        if bot_cntr is None:
+            return False
         # b) Converting from point --> array to apply transforms
         bot_cntr_arr =  np.array([bot_cntr[1],bot_cntr[0]])
         # c) Shift origin from sat_view -> maze
@@ -172,22 +189,30 @@ class bot_localizer():
         bot_on_maze[1] = bot_on_maze[1] + (rot_rows * (bot_on_maze[1]<0) )
         # Update the placeholder for relative location of car
         self.loc_car = (int(bot_on_maze[0]),int(bot_on_maze[1]))
+        return True
 
     def localize_bot(self,curr_frame,frame_disp):
         
         # Step 1: Background Model Extraction
         if not self.is_bg_extracted:
-            self.extract_bg(curr_frame.copy())
+            bg_extracted = self.extract_bg(curr_frame.copy())
+            if not bg_extracted:
+                return False
             self.is_bg_extracted = True
             
         # Step 2: Foreground Detection
+        if isinstance(self.bg_model, list) or len(np.shape(self.bg_model)) == 0:
+            return False
         change = cv2.absdiff(curr_frame, self.bg_model)
         change_gray = cv2.cvtColor(change, cv2.COLOR_BGR2GRAY)
         change_mask = cv2.threshold(change_gray, 15, 255, cv2.THRESH_BINARY)[1]
         car_mask, car_cnt = ret_largest_obj(change_mask)
+        if car_cnt is None or len(car_cnt) == 0:
+            return False
 
         # Step 3: Fetching the (relative) location of car.
-        self.get_car_loc(car_cnt,car_mask)
+        if not self.get_car_loc(car_cnt,car_mask):
+            return False
 
         # Drawing bounding circle around detected car
         center, radii = cv2.minEnclosingCircle(car_cnt)
@@ -220,3 +245,5 @@ class bot_localizer():
 
             except:
                 pass
+
+        return True

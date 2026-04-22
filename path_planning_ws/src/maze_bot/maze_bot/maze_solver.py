@@ -73,6 +73,7 @@ class maze_solver(Node):
         self.bot_turning = 0
 
         self.sat_view = np.zeros((100,100))
+        self.bot_view = np.zeros((100,100,3), dtype=np.uint8)
 
         self.debugging = Debugging()
 
@@ -212,11 +213,17 @@ class maze_solver(Node):
         
         self.debugging.setDebugParameters()
 
+        # Wait for the first valid satellite frame before running pipeline stages.
+        if self.sat_view is None or len(self.sat_view.shape) != 3 or self.sat_view.size == 0:
+            return
+
         # Creating frame to display current robot state to user        
         frame_disp = self.sat_view.copy()
         
         # [Stage 1: Localization] Localizing robot at each iteration        
-        self.bot_localizer.localize_bot(self.sat_view, frame_disp)
+        localized = self.bot_localizer.localize_bot(self.sat_view, frame_disp)
+        if not localized:
+            return
 
         # [Stage 2: Mapping] Converting Image to Graph
         self.bot_mapper.graphify(self.bot_localizer.maze_og)

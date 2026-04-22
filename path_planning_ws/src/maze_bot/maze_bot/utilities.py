@@ -22,7 +22,8 @@ def ret_largest_obj(img):
     if (Max_Cntr_idx!=-1):
         img_largestobject = cv2.drawContours(img_largestobject, cnts, Max_Cntr_idx, 255, -1) # [ contour = less then minarea contour, contourIDx, Colour , Thickness ]
         img_largestobject = cv2.drawContours(img_largestobject, cnts, Max_Cntr_idx, 255, 2) # [ contour = less then minarea contour, contourIDx, Colour , Thickness ]
-    return img_largestobject,cnts[Max_Cntr_idx]
+        return img_largestobject,cnts[Max_Cntr_idx]
+    return img_largestobject,None
 
 def ret_smallest_obj(cnts, noise_thresh = 10):
   Min_Cntr_area = 1000
@@ -130,10 +131,11 @@ class Debugging:
             config.debug_path_live_amount = (debug_path_live_amount/100)
 
         else:
-            self.Live_created = False
-            try:
-                cv2.destroyWindow('CONFIG_LIVE')
-            except:
-                pass  
+            if self.Live_created:
+                self.Live_created = False
+                try:
+                    cv2.destroyWindow('CONFIG_LIVE')
+                except:
+                    pass
 
 
