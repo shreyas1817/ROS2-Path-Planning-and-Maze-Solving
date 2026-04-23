@@ -18,11 +18,6 @@ E.g ( self.bot_localizer.localize_bot(self.sat_view, frame_disp) )
 1) self.car_loc => Cordinates (X,Y) of the localized car
 2) self.maze_og => Occupancy Grid generated from the cropped maze
 
-Author :
-Haider Abbasi
-
-Date :
-6/04/22
 '''
 import cv2
 import numpy as np

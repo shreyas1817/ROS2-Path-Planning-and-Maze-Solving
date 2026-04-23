@@ -17,11 +17,6 @@ E.g ( self.bot_mapper.graphify(self.bot_localizer.maze_og) )
 1) self.Graph.graph       => Generated graph from provided maze occupancy grid
 2) self.maze              => Image displaying only pathways in maze
 
-Author :
-Haider Abbasi
-
-Date :
-6/04/22
 '''
 import cv2
 import numpy as np

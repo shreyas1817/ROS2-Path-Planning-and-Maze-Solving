@@ -16,11 +16,6 @@ This node is subscribing video feed from (Satellite or DroneCam)
 > Outputs:
 This node publishes on topic "/cmd_vel" , the required velocity ( linear and angular ) to move the robot
 
-Author :
-Haider Abbasi
-
-Date :
-18/03/22
 '''
 
 import rclpy

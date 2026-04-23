@@ -219,31 +219,3 @@ Why this matters:
 "Planner computes shortest route with Dijkstra or A*."
 "Motion planner converts path waypoints to cmd_vel and drives the robot."
 "Operator can switch algorithm and start/pause live from keyboard."
-
-Why this matters:
-- This script ensures your explanation is concise, technical, and ordered.
-- It prevents skipping critical parts under demo pressure.
-- It demonstrates full-stack ownership: simulation, perception, planning, and control.
-
-14) Common Q&A for Presentation
-Q1) Why A* if Dijkstra already works?
-A1) Dijkstra is a reliable optimal baseline; A* is usually faster due heuristic guidance.
-
-Q2) Is the maze map pre-programmed?
-A2) The graph used by planner is generated online from camera occupancy processing.
-
-Q3) Why small startup movement?
-A3) Short heading calibration helps align control behavior before full path following.
-
-Q4) What if first frames are noisy?
-A4) Localization includes guards to skip processing until valid contours/background are available.
-
-Q5) Why did Gazebo duplicate-node errors happen before?
-A5) Camera plugin name collisions; fixed by unique plugin names.
-
-Why this matters:
-- Preparing answers in advance increases confidence and technical clarity.
-- It helps you handle faculty questions consistently under time pressure.
-- Good Q&A performance signals system understanding, not just implementation.
-
-END OF DOCUMENT

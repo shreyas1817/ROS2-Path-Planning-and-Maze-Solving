@@ -11,7 +11,7 @@ def _launch_setup(context):
     urdf_file = os.path.join(package_share_dir, "urdf", "maze_bot.urdf")
     maze_id = LaunchConfiguration("maze_id").perform(context)
     if maze_id not in ["1", "2"]:
-        maze_id = "2"
+        maze_id = "1"
     world_file = os.path.join(package_share_dir, "worlds", "maze_{}.world".format(maze_id))
 
     model_path, plugin_path, media_path = GazeboRosPaths.get_paths()
@@ -39,7 +39,7 @@ def generate_launch_description():
         [
             DeclareLaunchArgument(
                 "maze_id",
-                default_value="2",
+                default_value="1",
                 description="Maze world to load: 1 or 2",
             ),
             OpaqueFunction(function=_launch_setup),

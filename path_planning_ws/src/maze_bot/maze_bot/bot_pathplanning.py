@@ -21,9 +21,6 @@ E.g ( self.bot_pathplanner.find_path_nd_display(self.bot_mapper.Graph.graph, sta
 1) self.path_to_goal      => Computed Path from Source to destination [List of Cordinates]
 2) self.img_shortest_path => Found path Overlayed (In Color) on Image
 
-
-Date :
-6/04/22
 '''
 import cv2
 import numpy as np

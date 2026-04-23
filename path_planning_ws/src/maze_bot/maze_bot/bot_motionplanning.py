@@ -20,11 +20,6 @@ E.g ( self.bot_motionplanner.nav_path(bot_loc, path, self.vel_msg, self.velocity
 1) speed              => Speed with which the car travels at any given moment
 2) angle              => Amount of turning the car needs to do at any moment
 
-Author :
-Haider Abbasi
-
-Date :
-6/04/22
 '''
 import cv2
 import numpy as np
@@ -34,7 +29,6 @@ from numpy import interp
 import pygame
 import os
 pygame.mixer.init()
-pygame.mixer.music.load(os.path.abspath('src/maze_bot/resource/aud_chomp.mp3'))
 
 from . import config
 
@@ -385,9 +379,6 @@ class bot_motionplanner():
                 self.goal_pose_x = path[self.path_iter][0]
                 self.goal_pose_y = path[self.path_iter][1]
                 #print("Current Goal (x,y) = ( {} , {} )".format(path[self.path_iter][0],path[self.path_iter][1]))
-                
-                if pygame.mixer.music.get_busy() == False:
-                    pygame.mixer.music.play()
 
     def nav_path(self,bot_loc,path,velocity,velocity_publisher):
 
